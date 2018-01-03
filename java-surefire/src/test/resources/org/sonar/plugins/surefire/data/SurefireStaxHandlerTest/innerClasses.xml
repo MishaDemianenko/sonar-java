@@ -2,10 +2,7 @@
 <testsuite failures="0" time="157.199" errors="18" skipped="0" tests="13025"
            name="org.apache.commons.collections.TestAllPackages">
   <properties>
-    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
-    <property name="sun.boot.library.path"
-              value="/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Libraries"/>
-    <property name="java.vm.version" value="11.3-b02-83"/>
+    <!-- list of properties... -->
   </properties>
   <testcase time="0.012" classname="org.apache.commons.collections.bidimap.AbstractTestBidiMap"
             name="testMapEntrySetIteratorEntrySetValueCrossCheck"/>
