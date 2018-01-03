@@ -19,6 +19,11 @@
  */
 package org.sonar.plugins.surefire;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,12 +40,6 @@ import org.sonar.api.test.TestCase;
 import org.sonar.api.utils.log.LogTester;
 import org.sonar.api.utils.log.LoggerLevel;
 import org.sonar.plugins.java.api.JavaResourceLocator;
-
-import java.io.File;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -187,6 +186,29 @@ public class SurefireJavaParserTest {
     assertThat(context.measure(":java.Foo", CoreMetrics.TEST_ERRORS).value()).isEqualTo(0);
     assertThat(context.measure(":java.Foo", CoreMetrics.TEST_FAILURES).value()).isEqualTo(0);
     assertThat(context.measure(":java.Foo", CoreMetrics.TEST_EXECUTION_TIME).value()).isEqualTo(659);
+  }
+
+  @Test
+  public void should_handle_junit_5_0_repeated_tests() throws URISyntaxException {
+    SensorContextTester context = mockContext();
+    when(javaResourceLocator.findResourceByClassName(anyString()))
+      .thenAnswer(invocation -> {
+        String className = (String) invocation.getArguments()[0];
+        if (className.startsWith("org.foo.ATest")) {
+          return new TestInputFileBuilder("", className).build();
+        }
+        return null;
+      });
+
+    parser.collect(context, getDirs("junit50RepeatedTests"), true);
+
+    // class names and test names are wrong in JUnit 5.0, resulting in repeated/parametrized tests sharing the same name,
+    // with class name being the name of the test (cf. https://github.com/junit-team/junit5/issues/1182)
+    assertThat(context.measure(":org.foo.ATest", CoreMetrics.TESTS).value()).isEqualTo(13);
+    assertThat(context.measure(":org.foo.ATest", CoreMetrics.SKIPPED_TESTS).value()).isEqualTo(0);
+    assertThat(context.measure(":org.foo.ATest", CoreMetrics.TEST_ERRORS).value()).isEqualTo(0);
+    assertThat(context.measure(":org.foo.ATest", CoreMetrics.TEST_FAILURES).value()).isEqualTo(0);
+    assertThat(context.measure(":org.foo.ATest", CoreMetrics.TEST_EXECUTION_TIME).value()).isEqualTo(62);
   }
 
   @Test
